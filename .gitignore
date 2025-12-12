@@ -1,0 +1,9 @@
+# Arquivos de Python
+__pycache__/
+*.pyc
+
+# Ambiente Virtual
+venv/
+
+# Arquivos do FastAPI/Uvicorn
+.uvicorn/
