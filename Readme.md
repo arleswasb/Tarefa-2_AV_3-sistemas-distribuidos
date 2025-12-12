@@ -1,15 +1,10 @@
 
 
-## Modelo de README.md Detalhado
-
-````markdown
 # Implementação de Modelos de Consistência Distribuída (Twitter)
 
 Este repositório contém o código de implementação da **Tarefa V2 - Parte 2 de Sistemas Distribuídos**, focado na comparação prática entre os modelos de **Consistência Eventual (EC)** e **Consistência Causal (CC)**.
 
 O projeto utiliza um sistema simulado de rede social (Twitter simplificado) para demonstrar como a latência de rede afeta a ordenação e a visibilidade dos dados, especificamente o problema da **Reply Órfã**.
-
----
 
 ## Objetivo Principal
 
@@ -18,7 +13,7 @@ Demonstrar que:
 1.  A **Consistência Eventual (EC)** permite violações causais momentâneas, resultando em *Replies Órfãs* (respostas a posts ainda desconhecidos).
 2.  A **Consistência Causal (CC)**, utilizando **Relógios Lógicos Vetoriais (VLC)** e um **Buffer de Mensagens**, previne a *Reply Órfã* ao adiar a entrega de mensagens que violam a ordem causal.
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 * **Linguagem:** Python 3.x
 * **Framework Web:** FastAPI (utilizado para criar os endpoints de comunicação entre as réplicas: `/post` e `/share`)
@@ -97,10 +92,22 @@ Para demonstrar a diferença entre os modelos, o código `Unificado_EC_CC.py` po
 
 ```bash
 # 1. Post Pai A
-curl -X POST http://localhost:8080/post -H "Content-Type: application/json" -d '{"processId": 0, "evtId": "A1", "author": "Alice", "text": "Post Pai Original"}'
+curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '{
+    "processId": 1,
+    "evtId": "R2",
+    "parentEvtId": "A1", 
+    "author": "Bob",
+    "text": "Reply Filho: Discordo, é um geóide!"
+}'
 
 # 2. Reply Filho R (Após P1 receber A, geralmente instantâneo)
-curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '{"processId": 1, "evtId": "R2", "parentEvtId": "A1", "author": "Bob", "text": "Reply Filho"}'
+curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '{
+    "processId": 1,
+    "evtId": "R2",
+    "parentEvtId": "A1", 
+    "author": "Bob",
+    "text": "Reply Filho: Discordo, é um geóide!"
+}'
 ```
 
 ### Cenário 2: Consistência Causal (CC)
@@ -109,7 +116,7 @@ curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '
 
 | Ação | Emissor | Nó Recebedor | Efeito Esperado (P2) |
 | :--- | :--- | :--- | :--- |
-| **1. Envio do Post Pai (A)** | P0 (Atraso 60s para P2) | `http://localhost:8080/post` | P2 não recebe A imediatamente. |
+| **1. Envio do Post Pai (A)** | P0 (Atraso 30s para P2) | `http://localhost:8080/post` | P2 não recebe A imediatamente. |
 | **2. Envio do Reply Filho (R)** | P1 (Viu A) | `http://localhost:8081/post` | **DETECÇÃO:** P2 recebe R. O VLC de R (`[1, 1, 0]`) é incoerente com o VLC local de P2 (`[0, 0, 0]`). A mensagem R é **ADIADA** no `message_buffer` e o usuário **não vê** a Reply. |
 | **3. Chegada do Atrasado** | P0 (Após 60s) | P2 | **ENTREGA COERENTE:** P2 recebe A, atualiza o VLC. O `checkBuffer` é acionado e R é **entregue e anexado** imediatamente após A. |
 

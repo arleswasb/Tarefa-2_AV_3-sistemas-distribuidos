@@ -201,9 +201,8 @@ def post(msg: Event):
             
             # Condição para o Teste Específico (Se P0 estiver enviando a mensagem Pai)
             delay = 0
-            if myProcessId == 0 and i == 2: # Se P0 (Emissor) envia para P2 (Réplica)
-                # Aplicar 20s de atraso SOMENTE nesta rota para P2
-                delay = 20 
+            if myProcessId == 0 and i == 2: 
+                delay = 30 
             
             async_send(url + "/share", payload, delay)
 
