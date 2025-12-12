@@ -84,7 +84,7 @@ Para demonstrar a diferença entre os modelos, o código `Unificado_EC_CC.py` po
 
 | Ação | Emissor | Nó Recebedor | Efeito Esperado (P2) |
 | :--- | :--- | :--- | :--- |
-| **1. Envio do Post Pai (A)** | P0 (Atraso 60s para P2) | `http://localhost:8080/post` | P2 não recebe A imediatamente. |
+| **1. Envio do Post Pai (A)** | P0 (Atraso 30s para P2) | `http://localhost:8080/post` | P2 não recebe A imediatamente. |
 | **2. Envio do Reply Filho (R)** | P1 (Viu A) | `http://localhost:8081/post` | **INCONSISTÊNCIA:** P2 recebe R, não encontra A, e o publica com a tag `[ÓRFÃ]`. |
 | **3. Chegada do Atrasado** | P0 (Após 60s) | P2 | **CONVERGÊNCIA:** P2 recebe A, associa R e remove a tag `[ÓRFÃ]`. |
 
@@ -126,23 +126,27 @@ curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '
 
 ### Relógio Lógico Vetorial (VLC)
 
-O estado `vector_clock` é uma lista de inteiros, onde `vector_clock[i]` representa o número de eventos que o nó atual viu do nó $P_i$.
+O estado `vector_clock` é uma lista de inteiros, onde `vector_clock[i]` representa a contagem de eventos que o nó atual viu do nó $P_i$.
 
 ### Lógica Causal (Função `isCausallyReady`)
 
-Esta função verifica se a mensagem pode ser entregue, garantindo que:
-$$V_{rcv}[i] = V_{loc}[i] + 1 \quad \text{(Para o emissor $i$)}$$
-$$V_{rcv}[j] \leq V_{loc}[j] \quad \text{(Para todos os outros processos $j$)}$$
+Esta função verifica se uma mensagem recebida (`V_rcv`) pode ser entregue em relação ao Relógio Vetorial local (`V_loc`). A entrega só ocorre se as seguintes condições forem satisfeitas:
+
+* **1. Coerência do Emissor (Não Pulou Eventos):**
+    * O componente do emissor $i$ no vetor recebido deve ser exatamente um a mais que o local.
+    * **Notação:** `V_rcv[i] = V_loc[i] + 1`
+
+* **2. Coerência dos Outros Processos (Viu todas as Causas):**
+    * O componente de qualquer outro processo $j$ no vetor recebido deve ser menor ou igual ao que o nó local já viu.
+    * **Notação:** `V_rcv[j] <= V_loc[j]` (Para todo $j \ne i$)
+
 
 ### Buffer de Mensagens
 
-Em CC, o `message_buffer` armazena os objetos `Event` que violaram a causalidade. O `checkBuffer` é invocado após cada entrega bem-sucedida para tentar liberar mensagens represadas.
+Em Consistência Causal (CC), o `message_buffer` armazena os objetos `Event` que violaram a causalidade (ou seja, falharam na checagem `isCausallyReady`). A função `checkBuffer` é invocada após cada entrega bem-sucedida para tentar liberar mensagens represadas que se tornaram coerentes.
 
------
 
 ## Contribuição
 
-Este projeto foi desenvolvido cpor Werbert Arles.
+Este projeto foi desenvolvido por Werbert Arles.
 
-
-```
