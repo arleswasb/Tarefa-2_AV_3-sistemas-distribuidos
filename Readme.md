@@ -92,12 +92,11 @@ Para demonstrar a diferença entre os modelos, o código `Unificado_EC_CC.py` po
 
 ```bash
 # 1. Post Pai A
-curl -X POST http://localhost:8081/post -H "Content-Type: application/json" -d '{
-    "processId": 1,
-    "evtId": "R2",
-    "parentEvtId": "A1", 
-    "author": "Bob",
-    "text": "Reply Filho: Discordo, é um geóide!"
+curl -X POST http://localhost:8080/post -H "Content-Type: application/json" -d '{
+    "processId": 0,
+    "evtId": "A1",
+    "author": "Alice",
+    "text": "Post Pai Original: A Terra é plana"
 }'
 
 # 2. Reply Filho R (Após P1 receber A, geralmente instantâneo)
